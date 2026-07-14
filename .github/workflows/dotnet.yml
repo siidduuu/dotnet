@@ -1,0 +1,36 @@
+name: .NET CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Calculator.sln
+
+      - name: Build
+        run: dotnet build Calculator.sln --configuration Release --no-restore
+
+      - name: Lint
+        run: dotnet format Calculator.sln --verify-no-changes
+        continue-on-error: true
+
+      - name: Test
+        run: dotnet test Calculator.sln --logger "trx;LogFileName=test-results.trx"
+
+      - name: Publish
+        run: dotnet publish Calculator/Calculator.csproj -c Release -o publish
+
+      - name: Run Application
+        run: dotnet publish/Calculator.dll
